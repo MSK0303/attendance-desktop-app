@@ -1,0 +1,23 @@
+.main-view {
+
+    & .grid-top {
+
+
+        & .grid-calender {
+            background-color: chartreuse;
+        }
+
+        & .grid-contents {
+            height: 100vh;
+            & .grid-buttons {
+                background-color: aqua;
+                height: 50%;
+            }
+
+            & .grid-note {
+                background-color: brown;
+                height: 50%;
+            }
+        }
+    }
+}
