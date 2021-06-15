@@ -5,18 +5,33 @@
 
         & .grid-calender {
             background-color: chartreuse;
+            border: 1px solid black;
         }
 
         & .grid-contents {
             height: 100vh;
+
+            & .grid-date-line {
+                background-color: #78F6F6;
+                height: 5%;
+                border: 1px solid black;
+                border-left: 0px;
+            }
+
             & .grid-buttons {
-                background-color: aqua;
-                height: 50%;
+                height: 45%;
+            }
+
+            & .grid-note-header {
+                background-color: #78F6F6;
+                height: 5%;
+                border: 1px solid black;
+                border-left: 0px;
             }
 
             & .grid-note {
                 background-color: brown;
-                height: 50%;
+                height: 45%;
             }
         }
     }
