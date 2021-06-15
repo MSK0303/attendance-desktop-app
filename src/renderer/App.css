@@ -18,6 +18,46 @@
   height: 45%;
 }
 
+.main-view .grid-top .grid-contents .grid-buttons .grid-button-commuting {
+  background-color: #7BBEF9;
+  color: #707070;
+  font-size: 40px;
+  font-weight: bold;
+  margin: 15px;
+  width: 40%;
+  height: 80%;
+}
+
+.main-view .grid-top .grid-contents .grid-buttons .grid-button-leave-work {
+  background-color: #FF9675;
+  color: #707070;
+  font-size: 40px;
+  font-weight: bold;
+  margin: 15px;
+  width: 40%;
+  height: 80%;
+}
+
+.main-view .grid-top .grid-contents .grid-buttons .grid-button-rest {
+  background-color: #7EFFBF;
+  color: #707070;
+  font-size: 40px;
+  font-weight: bold;
+  margin: 15px;
+  width: 40%;
+  height: 80%;
+}
+
+.main-view .grid-top .grid-contents .grid-buttons .grid-button-go-out {
+  background-color: #EDFF91;
+  color: #707070;
+  font-size: 40px;
+  font-weight: bold;
+  margin: 15px;
+  width: 40%;
+  height: 80%;
+}
+
 .main-view .grid-top .grid-contents .grid-note-header {
   background-color: #78F6F6;
   height: 5%;
