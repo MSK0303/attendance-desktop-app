@@ -1,3 +1,5 @@
+import React from "react";
+
 export enum ACTION_STATE {
     COMMUTING,      //出勤
     LEAVE_WORK,     //退勤
@@ -14,4 +16,13 @@ export interface HISTORY_OBJECT {
 
 export interface HISTORY_BUFFER {
     buff: HISTORY_OBJECT[],
+}
+
+export interface BUTTONS_PARAM {
+    rest_text:string,
+    go_out_text:string,
+    commuting_cb:React.MouseEventHandler<HTMLButtonElement>,
+    leave_work_cb:React.MouseEventHandler<HTMLButtonElement>,
+    rest_cb:React.MouseEventHandler<HTMLButtonElement>,
+    go_out_cb:React.MouseEventHandler<HTMLButtonElement>,
 }
