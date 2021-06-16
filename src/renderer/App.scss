@@ -1,0 +1,78 @@
+.main-view {
+
+    & .grid-top {
+
+
+        & .grid-calender {
+            background-color: chartreuse;
+            border: 1px solid black;
+        }
+
+        & .grid-contents {
+            height: 100vh;
+
+            & .grid-date-line {
+                background-color: #78F6F6;
+                height: 5%;
+                border: 1px solid black;
+                border-left: 0px;
+            }
+
+            & .grid-buttons {
+                height: 45%;
+
+                //出勤ボタンのデザイン
+                & .grid-button-commuting {
+                    background-color: #7BBEF9;
+                    color: #707070;
+                    font-size: 40px;
+                    font-weight: bold;
+                    margin: 15px;
+                    width: 40%;
+                    height: 80%;
+                }
+                //退勤ボタンのデザイン
+                & .grid-button-leave-work {
+                    background-color: #FF9675;
+                    color: #707070;
+                    font-size: 40px;
+                    font-weight: bold;
+                    margin: 15px;
+                    width: 40%;
+                    height: 80%;
+                }
+                //休憩開始ボタンのデザイン
+                & .grid-button-rest {
+                    background-color: #7EFFBF;
+                    color: #707070;
+                    font-size: 40px;
+                    font-weight: bold;
+                    margin: 15px;
+                    width: 40%;
+                    height: 80%;
+                }
+                //外出開始ボタンのデザイン
+                & .grid-button-go-out {
+                    background-color: #EDFF91;
+                    color: #707070;
+                    font-size: 40px;
+                    font-weight: bold;
+                    margin: 15px;
+                    width: 40%;
+                    height: 80%;
+                }
+            }
+
+            & .grid-note-header {
+                background-color: #78F6F6;
+                height: 5%;
+                border: 1px solid black;
+                border-left: 0px;
+            }
+
+            & .grid-note {
+                height: 45%;
+            }
+        }
+    }
+}

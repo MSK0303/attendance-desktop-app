@@ -1,0 +1,12 @@
+.history_top {
+    width: 100%;
+    overflow: scroll;
+    & .history_date {
+        text-align: center;
+        background-color: #c0c0c0;
+    }
+
+    & .history_message {
+        margin-left: 20px;
+    }
+}
