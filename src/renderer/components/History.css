@@ -1,0 +1,14 @@
+.history_top {
+  width: 100%;
+  overflow: scroll;
+}
+
+.history_top .history_date {
+  text-align: center;
+  background-color: #c0c0c0;
+}
+
+.history_top .history_message {
+  margin-left: 20px;
+}
+/*# sourceMappingURL=History.css.map */
