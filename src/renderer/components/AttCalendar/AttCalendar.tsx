@@ -4,6 +4,17 @@ import './AttCalendar.css';
 
 const AttCalendar = () => {
 
+    const getStringDate = (date:Date) => {
+        const day:string = date.getFullYear() + "/" + ('0'+date.getMonth()).slice(-2) + "/" + ('0'+date.getDate()).slice(-2);
+        
+        return day;
+    }
+
+    const getStringTime = (date:Date) => {
+        const time:string = ('0'+date.getHours()).slice(-2) + ":" + ('0'+date.getMinutes()).slice(-2);
+        return time;
+    }
+
     const onChange = (value: Date, event: React.ChangeEvent<HTMLInputElement>) => {
         console.log("onChange");
     }
@@ -13,6 +24,8 @@ const AttCalendar = () => {
 
     const onClickDay = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
         console.log("onClickDay");
+        console.log("date : "+getStringDate(value));
+        console.log("time : "+getStringTime(value));
     }
 
     const onClickDecade = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
