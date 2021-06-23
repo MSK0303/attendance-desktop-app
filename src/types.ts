@@ -26,3 +26,18 @@ export interface BUTTONS_PARAM {
     rest_cb:React.MouseEventHandler<HTMLButtonElement>,
     go_out_cb:React.MouseEventHandler<HTMLButtonElement>,
 }
+
+type AttCalendarDayClickHandler = (date:Date) => void;
+
+export interface CALENDAR_PARAM {
+    click_day_cb:AttCalendarDayClickHandler,
+}
+
+export interface ATT_DETAIL_PARAM {
+    date: string,
+    commuting_time: string|undefined,
+    leave_work_time: string|undefined,
+    rest_time: string|undefined,
+    go_out_time: string|undefined,
+    total_work_time: string|undefined,
+}

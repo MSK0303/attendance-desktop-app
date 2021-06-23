@@ -1,5 +1,13 @@
-.main-view .grid-top .grid-calender {
+.main-view .grid-top .grid-calendar {
   border: 1px solid black;
+}
+
+.main-view .grid-top .grid-calendar .grid-calendar-top {
+  height: 55%;
+}
+
+.main-view .grid-top .grid-calendar .grid-calendar-bottom {
+  height: 45%;
 }
 
 .main-view .grid-top .grid-contents {

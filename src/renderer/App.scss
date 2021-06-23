@@ -3,8 +3,16 @@
     & .grid-top {
 
 
-        & .grid-calender {
+        & .grid-calendar {
             border: 1px solid black;
+
+            & .grid-calendar-top {
+                height: 55%;
+            }
+
+            & .grid-calendar-bottom {
+                height: 45%;
+            }
         }
 
         & .grid-contents {
@@ -19,47 +27,6 @@
 
             & .grid-buttons {
                 height: 45%;
-
-                // //出勤ボタンのデザイン
-                // & .grid-button-commuting {
-                //     background-color: #7BBEF9;
-                //     color: #707070;
-                //     font-size: 40px;
-                //     font-weight: bold;
-                //     margin: 15px;
-                //     width: 40%;
-                //     height: 80%;
-                // }
-                // //退勤ボタンのデザイン
-                // & .grid-button-leave-work {
-                //     background-color: #FF9675;
-                //     color: #707070;
-                //     font-size: 40px;
-                //     font-weight: bold;
-                //     margin: 15px;
-                //     width: 40%;
-                //     height: 80%;
-                // }
-                // //休憩開始ボタンのデザイン
-                // & .grid-button-rest {
-                //     background-color: #7EFFBF;
-                //     color: #707070;
-                //     font-size: 40px;
-                //     font-weight: bold;
-                //     margin: 15px;
-                //     width: 40%;
-                //     height: 80%;
-                // }
-                // //外出開始ボタンのデザイン
-                // & .grid-button-go-out {
-                //     background-color: #EDFF91;
-                //     color: #707070;
-                //     font-size: 40px;
-                //     font-weight: bold;
-                //     margin: 15px;
-                //     width: 40%;
-                //     height: 80%;
-                // }
             }
 
             & .grid-note-header {

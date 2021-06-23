@@ -6,6 +6,7 @@ import {ACTION_STATE, BUTTONS_PARAM, HISTORY_BUFFER, HISTORY_OBJECT} from '../ty
 import History from "./components/History/History";
 import Buttons from './components/Buttons/Buttons';
 import AttCalendar from './components/AttCalendar/AttCalendar';
+import AttDetail from './components/AttDetail/AttDetail';
 
 //react
 import {Grid,Button} from '@material-ui/core';
@@ -73,9 +74,16 @@ const App: React.FC = () => {
   return (
     <div className="main-view">
       <Grid container className="grid-top">
-        {/*左側の画面 Calender表示 */}
-        <Grid item xs={6} className="grid-calender">
-          <AttCalendar />
+        {/*左側の画面 */}
+        <Grid item xs={6} className="grid-calendar">
+          {/*左上側　Calender表示  */}
+          <Grid container className="grid-calendar-top">
+            <AttCalendar />
+          </Grid>
+          {/*左下側　詳細画面表示  */}
+          <Grid container className="grid-calendar-bottom">
+            <AttDetail date="2021/06/21" commuting_time="9:00" leave_work_time="18:00" rest_time="1:30" go_out_time="2:15" />
+          </Grid>
         </Grid>
         {/*右側の画面　上にボタン　下に履歴を表示 */}
         <Grid item xs={6} className="grid-contents">

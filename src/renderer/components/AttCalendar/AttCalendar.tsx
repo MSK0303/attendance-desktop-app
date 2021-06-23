@@ -10,11 +10,6 @@ const AttCalendar = () => {
         return day;
     }
 
-    const getStringTime = (date:Date) => {
-        const time:string = ('0'+date.getHours()).slice(-2) + ":" + ('0'+date.getMinutes()).slice(-2);
-        return time;
-    }
-
     const onChange = (value: Date, event: React.ChangeEvent<HTMLInputElement>) => {
         console.log("onChange");
     }
@@ -25,31 +20,9 @@ const AttCalendar = () => {
     const onClickDay = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
         console.log("onClickDay");
         console.log("date : "+getStringDate(value));
-        console.log("time : "+getStringTime(value));
     }
 
-    const onClickDecade = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("onClickDecade");
-    }
 
-    const onClickMonth = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("onClickMonth");
-    }
-
-    const onClickWeekNumber = (weekNumber: number, date: Date, event: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("onClickWeekNumber");
-    }
-
-    const onClickYear = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("onClickYear");
-    }
-
-    const onDrillUp = (props: DrillCallbackProperties) => {
-        console.log("onDrillUp");
-    }
-    const onDrillDown = (props: DrillCallbackProperties) => {
-        console.log("onDrillDown");
-    }
 
 
 
@@ -60,12 +33,6 @@ const AttCalendar = () => {
             onChange={onChange}
             onViewChange={onViewChange}
             onClickDay={onClickDay}
-            onClickDecade={onClickDecade}
-            onClickMonth={onClickMonth}
-            onClickWeekNumber={onClickWeekNumber}
-            onClickYear={onClickYear}
-            onDrillUp={onDrillUp}
-            onDrillDown={onDrillDown}
             />
         </div>
     )
