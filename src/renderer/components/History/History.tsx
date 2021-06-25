@@ -1,6 +1,6 @@
 import React,{useState,useEffect} from 'react'
 import {Grid} from '@material-ui/core';
-import {ACTION_STATE, HISTORY_OBJECT,HISTORY_BUFFER} from '../../types';
+import {ACTION_STATE, HISTORY_OBJECT,HISTORY_BUFFER} from '../../../types';
 import './History.css';
 
 const History = (props:HISTORY_BUFFER) => {
