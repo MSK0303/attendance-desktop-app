@@ -5,14 +5,6 @@ import './AttDetail.css';
 
 
 const AttDetail = (props:ATT_DETAIL_PARAM) => {
-    //下はpropsで与えて更新でもいいかも
-    /*const [date,setDate]=useState("");
-    const [commutingTime,setCommutingTime] = useState("");
-    const [leaveWorkTime,setLeaveWorkTime] = useState("");
-    const [restStartTime,setRestStartTime] = useState("");
-    const [restEndTime,setRestEndTime] = useState("");
-    const [goOutStartTime,setGoOutStartTime] = useState("");
-    const [goOutEndTime,setGoOutEndTime] = useState("");*/
 
     return (
         <div className="att-detail-top">
@@ -46,25 +38,6 @@ const AttDetail = (props:ATT_DETAIL_PARAM) => {
                     <p className="att-detail-total-work-time">{props.total_work_time!=undefined?props.total_work_time+"h":"0h"}</p>
                 </Grid>
             </Grid>
-
-            {/* <Grid container className="att-detail-content" justify="center" alignItems="center">
-                <Grid item xs={3} className="att-detail-item"><span className="att-detail-item-show">出勤時間</span></Grid>
-                <Grid item xs={4} className="att-detail-item"><span className="att-detail-item-show">{props.commuting_time!=undefined ? props.commuting_time : ""}</span></Grid>
-            </Grid>
-            <Grid container className="att-detail-content" justify="center" alignItems="center">
-                <Grid item xs={3} className="att-detail-item"><span className="att-detail-item-show">退勤時間</span></Grid>
-                <Grid item xs={4} className="att-detail-item"><span className="att-detail-item-show">{props.leave_work_time!=undefined ? props.leave_work_time : ""}</span></Grid>
-            </Grid>
-            <br />
-            <Grid container className="att-detail-content" justify="center" alignItems="center">
-                <Grid item xs={3} className="att-detail-item"><span className="att-detail-item-show">休憩時間</span></Grid>
-                <Grid item xs={4} className="att-detail-item"><span className="att-detail-item-show">{props.rest_time!=undefined ? props.rest_time : ""}</span></Grid>
-            </Grid>
-            <br />
-            <Grid container className="att-detail-content" justify="center" alignItems="center">
-                <Grid item xs={3} className="att-detail-item"><span className="att-detail-item-show">外出時間</span></Grid>
-                <Grid item xs={4} className="att-detail-item"><span className="att-detail-item-show">{props.go_out_time!=undefined ? props.go_out_time : ""}</span></Grid>
-            </Grid> */}
         </div>
     )
 }
