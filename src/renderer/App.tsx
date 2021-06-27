@@ -11,11 +11,16 @@ import AttDetail from './components/AttDetail/AttDetail';
 //react
 import {Grid,Button} from '@material-ui/core';
 
+//import {getSampleData,setSampleData} from "../data/DatabaseManager";
+import db from './datastore';
+import Nedb from "nedb";
+
 const App: React.FC = () => {
   const [currentDate,setCurrentDate] = useState("2021/6/11(金)");
   const [restBtnText,setRestBtnText] = useState("休憩開始");
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
+  const [datastore,setDataStore] = useState(db);
 
   useEffect(() => {
     //test
@@ -39,7 +44,62 @@ const App: React.FC = () => {
     ];
 
     setHistoryBuff(test_histories);
-    console.log(history_buff);
+    //console.log(history_buff);
+
+    //test
+    const docs = [
+      {
+          "date": "2021/06/24",
+          "commuting" : "9:00",
+          "leave_work" : "18:00",
+          "rest_times" : [
+              {
+                  "start":"12:00",
+                  "end":"13:00"
+              }
+          ],
+          "go_out_times": [
+          ]
+      },
+      {
+          "date": "2021/06/25",
+          "commuting" : "9:00",
+          "leave_work" : "21:00",
+          "rest_times" : [
+              {
+                  "start":"10:00",
+                  "end":"10:30"
+              },
+              {
+                  "start":"12:00",
+                  "end":"13:00"
+              }
+          ],
+          "go_out_times": [
+              {
+                  "start":"14:10",
+                  "end":"14:30"
+              },
+              {
+                  "start":"18:00",
+                  "end":"19:00"
+              }
+          ]
+      }
+  ];
+
+  db.find({},(err:Error|null,doc:any[]) => {
+    console.log("db.find"+doc.length);
+    console.log(doc);
+    
+    if(!doc.length)
+    {
+      console.log("db.insert");
+      db.insert(docs);
+    }
+  })
+
+
   },[]);
 
   const click_commuting_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -82,7 +142,7 @@ const App: React.FC = () => {
           </Grid>
           {/*左下側　詳細画面表示  */}
           <Grid container className="grid-calendar-bottom">
-            <AttDetail date="2021/06/21" commuting_time="9:00" leave_work_time="18:00" rest_time="1:30" go_out_time="2:15" />
+            <AttDetail date="2021/06/21" commuting_time="9:00" leave_work_time="18:00" rest_time="1:30" go_out_time="2:15" total_work_time="0"/>
           </Grid>
         </Grid>
         {/*右側の画面　上にボタン　下に履歴を表示 */}
