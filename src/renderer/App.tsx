@@ -2,7 +2,7 @@ import React,{useState,useEffect} from 'react'
 import './App.css'
 import { hot } from 'react-hot-loader/root'
 import { remote } from 'electron'
-import {ACTION_STATE, BUTTONS_PARAM, HISTORY_BUFFER, HISTORY_OBJECT} from '../types';
+import {ACTION_STATE, BUTTONS_PARAM, HISTORY_BUFFER, HISTORY_OBJECT,DATABASE_FORMAT,START_END_TIMES} from '../types';
 import History from "./components/History/History";
 import Buttons from './components/Buttons/Buttons';
 import AttCalendar from './components/AttCalendar/AttCalendar';
@@ -20,8 +20,10 @@ const App: React.FC = () => {
   const [restBtnText,setRestBtnText] = useState("休憩開始");
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
-  const [datastore,setDataStore] = useState(db);
+  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:[{start:"",end:""}],go_out_times:[{start:"",end:""}],commuting:"",leave_work:""});
+  //const [datastore,setDataStore] = useState(db); //もしかしたら必要になるかも
 
+  //history関係
   useEffect(() => {
     //test
     const test_histories:HISTORY_OBJECT[] = [
@@ -42,64 +44,35 @@ const App: React.FC = () => {
         action_type: ACTION_STATE.LEAVE_WORK
       }
     ];
-
     setHistoryBuff(test_histories);
-    //console.log(history_buff);
-
-    //test
-    const docs = [
+  },[]);
+  //出退勤データ関係
+  useEffect(() => {
+    const current_date = new Date();
+    const str_current_date =  "2021/06/24";//current_date.getFullYear() + "/" + ('0'+current_date.getMonth()).slice(-2) + "/" + ('0'+current_date.getDate()).slice(-2);
+    console.log("search "+str_current_date);
+    db.find({date:str_current_date},(err:Error|null,doc:any[]) => {
+      if(err)
       {
-          "date": "2021/06/24",
-          "commuting" : "9:00",
-          "leave_work" : "18:00",
-          "rest_times" : [
-              {
-                  "start":"12:00",
-                  "end":"13:00"
-              }
-          ],
-          "go_out_times": [
-          ]
-      },
-      {
-          "date": "2021/06/25",
-          "commuting" : "9:00",
-          "leave_work" : "21:00",
-          "rest_times" : [
-              {
-                  "start":"10:00",
-                  "end":"10:30"
-              },
-              {
-                  "start":"12:00",
-                  "end":"13:00"
-              }
-          ],
-          "go_out_times": [
-              {
-                  "start":"14:10",
-                  "end":"14:30"
-              },
-              {
-                  "start":"18:00",
-                  "end":"19:00"
-              }
-          ]
+        console.log("db.find error occured");
       }
-  ];
-
-  db.find({},(err:Error|null,doc:any[]) => {
-    console.log("db.find"+doc.length);
-    console.log(doc);
-    
-    if(!doc.length)
-    {
-      console.log("db.insert");
-      db.insert(docs);
-    }
-  })
-
-
+      else
+      {
+        const data:DATABASE_FORMAT = doc[0];
+        //取得したデータベースを配列にセット
+        console.log("db.find:"+doc.length);
+        console.log(data);
+        console.log("date : "+data.date);
+        console.log("commuting : "+data.commuting);
+        console.log("leave_work : "+data.leave_work);
+        for (var item of data.rest_times){
+          console.log("rest start:"+item.start+","+"rest end:"+item.end);
+        }
+        for (var item of data.go_out_times){
+          console.log("go out start:"+item.start+","+"go out end:"+item.end);
+        }
+      }
+    })
   },[]);
 
   const click_commuting_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
