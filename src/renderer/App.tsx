@@ -23,6 +23,106 @@ const App: React.FC = () => {
   const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:[{start:"",end:""}],go_out_times:[{start:"",end:""}],commuting:"",leave_work:""});
   //const [datastore,setDataStore] = useState(db); //もしかしたら必要になるかも
 
+
+  /**************************************************************************************************
+  *関数群
+  **************************************************************************************************/
+  const getTodayInfo = (str_date:string) => {
+    return new Promise<DATABASE_FORMAT>((resolve,reject) => {
+      db.find({date:str_date},(err:Error|null,doc:any[]) => {
+        if(err)
+        {
+          console.log("db.find error occured");
+          reject(err);
+        }
+        else
+        {
+          if(doc.length > 0)
+          {
+            const data:DATABASE_FORMAT = doc[0];
+            //DEBUG
+            console.log("db.find:"+doc.length);
+            if(data != null)
+            {
+              console.log(data);
+              console.log("date : "+data.date);
+              console.log("commuting : "+data.commuting);
+              console.log("leave_work : "+data.leave_work);
+              for (var item of data.rest_times){
+                console.log("rest start:"+item.start+","+"rest end:"+item.end);
+              }
+              for (var item of data.go_out_times){
+                console.log("go out start:"+item.start+","+"go out end:"+item.end);
+              }
+            }
+            //DEBUG ここまで
+            resolve(data);
+          }
+          else
+          {
+            reject("empty docs");
+          }
+        }
+      })
+    } )
+  }
+
+  const getNumTimeFromStrTime = (str_time:string) : number => {
+    const ary = str_time.split(':');
+    const time = parseInt(ary[0],10)*60 + parseInt(ary[1],10);
+    console.log("from "+str_time+" to "+time);
+    return time;
+  }
+
+  const getStrTimeFromNumTime = (num_time:number) : string => {
+    const hour = Math.floor(num_time/60);
+    const min = num_time % 60;
+    const str_time = hour + ":" + min;
+    return str_time;
+  }
+
+  const calcTotalRestTime = () : number => {
+    let total_rest_time : number = 0;
+    if(att_db_data.rest_times.length > 0)
+    {
+      for (var item of att_db_data.rest_times)
+      {
+        if((item.start != null) && (item.end != null))
+        {
+          total_rest_time += (getNumTimeFromStrTime(item.end) - getNumTimeFromStrTime(item.start));
+        }
+      }
+    }
+    return total_rest_time;
+  }
+
+  const calcTotalGoOutTime = () : number => {
+    let total_go_out_time : number = 0;
+    if(att_db_data.go_out_times.length>0)
+    {
+      for (var item of att_db_data.go_out_times)
+      {
+        if((item.start != null) && (item.end != null))
+        {
+          total_go_out_time += (getNumTimeFromStrTime(item.end) - getNumTimeFromStrTime(item.start));
+        }
+      }
+    }
+    return total_go_out_time;
+  }
+  const calcTotalWorkTime = () : number => {
+    let total_work_time : number = 0;
+    if((att_db_data.commuting != null) && (att_db_data.leave_work != null))
+    {
+      total_work_time = (getNumTimeFromStrTime(att_db_data.leave_work) - getNumTimeFromStrTime(att_db_data.commuting)) - calcTotalRestTime() - calcTotalGoOutTime();
+    }
+    return total_work_time;
+  }
+
+  /**************************************************************************************************
+  *useEffect
+  **************************************************************************************************/
+
   //history関係
   useEffect(() => {
     //test
@@ -51,29 +151,17 @@ const App: React.FC = () => {
     const current_date = new Date();
     const str_current_date =  "2021/06/24";//current_date.getFullYear() + "/" + ('0'+current_date.getMonth()).slice(-2) + "/" + ('0'+current_date.getDate()).slice(-2);
     console.log("search "+str_current_date);
-    db.find({date:str_current_date},(err:Error|null,doc:any[]) => {
-      if(err)
-      {
-        console.log("db.find error occured");
-      }
-      else
-      {
-        const data:DATABASE_FORMAT = doc[0];
-        //取得したデータベースを配列にセット
-        console.log("db.find:"+doc.length);
-        console.log(data);
-        console.log("date : "+data.date);
-        console.log("commuting : "+data.commuting);
-        console.log("leave_work : "+data.leave_work);
-        for (var item of data.rest_times){
-          console.log("rest start:"+item.start+","+"rest end:"+item.end);
-        }
-        for (var item of data.go_out_times){
-          console.log("go out start:"+item.start+","+"go out end:"+item.end);
-        }
-      }
-    })
+    getTodayInfo(str_current_date).then((value:DATABASE_FORMAT) => {
+      setAttDbData(value);
+      console.log(att_db_data);
+
+
+
+    });
   },[]);
+  /**************************************************************************************************
+  *ui handler
+  **************************************************************************************************/
 
   const click_commuting_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_commuting_btn");
@@ -103,6 +191,9 @@ const App: React.FC = () => {
       setGoOutBtnText("外出開始");
     }
   }
+  /**************************************************************************************************
+  *JSX
+  **************************************************************************************************/
 
   return (
     <div className="main-view">
@@ -115,7 +206,7 @@ const App: React.FC = () => {
           </Grid>
           {/*左下側　詳細画面表示  */}
           <Grid container className="grid-calendar-bottom">
-            <AttDetail date="2021/06/21" commuting_time="9:00" leave_work_time="18:00" rest_time="1:30" go_out_time="2:15" total_work_time="0"/>
+            <AttDetail date={att_db_data.date} commuting_time={att_db_data.commuting != null ? att_db_data.commuting : ""} leave_work_time={att_db_data.leave_work != null ? att_db_data.leave_work : ""} rest_time={getStrTimeFromNumTime(calcTotalRestTime())} go_out_time={getStrTimeFromNumTime(calcTotalGoOutTime())} total_work_time={getStrTimeFromNumTime(calcTotalWorkTime())}/>
           </Grid>
         </Grid>
         {/*右側の画面　上にボタン　下に履歴を表示 */}
