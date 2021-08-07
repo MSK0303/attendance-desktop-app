@@ -16,18 +16,19 @@ import db from './datastore';
 import Nedb from "nedb";
 
 const App: React.FC = () => {
-  const [currentDate,setCurrentDate] = useState("2021/6/11(金)");
   const [restBtnText,setRestBtnText] = useState("休憩開始");
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
-  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:[{start:"",end:""}],go_out_times:[{start:"",end:""}],commuting:"",leave_work:""});
+  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
   //const [datastore,setDataStore] = useState(db); //もしかしたら必要になるかも
-
+  const STR_DAY_OF_WEEK_ARRAY = [ "日", "月", "火", "水", "木", "金", "土" ];
 
   /**************************************************************************************************
   *関数群
   **************************************************************************************************/
-  const getTodayInfo = (str_date:string) => {
+  //database access
+  //
+  const getDateInfo = (str_date:string) => {
     return new Promise<DATABASE_FORMAT>((resolve,reject) => {
       db.find({date:str_date},(err:Error|null,doc:any[]) => {
         if(err)
@@ -48,11 +49,17 @@ const App: React.FC = () => {
               console.log("date : "+data.date);
               console.log("commuting : "+data.commuting);
               console.log("leave_work : "+data.leave_work);
-              for (var item of data.rest_times){
-                console.log("rest start:"+item.start+","+"rest end:"+item.end);
+              if(data.rest_times != null)
+              {
+                for (var item of data.rest_times){
+                  console.log("rest start:"+item.start+","+"rest end:"+item.end);
+                }
               }
-              for (var item of data.go_out_times){
-                console.log("go out start:"+item.start+","+"go out end:"+item.end);
+              if(data.go_out_times != null)
+              {
+                for (var item of data.go_out_times){
+                  console.log("go out start:"+item.start+","+"go out end:"+item.end);
+                }
               }
             }
             //DEBUG ここまで
@@ -67,6 +74,27 @@ const App: React.FC = () => {
     } )
   }
 
+  //create
+  const createAttInfo = () => {
+    if(att_db_data.commuting == null)
+    {
+      const str_now_time = getStrNowTime();
+      att_db_data.commuting = str_now_time;
+      console.log("createAttInfo:"+att_db_data);
+      db.insert(att_db_data);
+    }
+    else
+    {
+      console.log("already set commuting");
+    }
+    
+  }
+
+  //update
+
+  //delete
+
+  //utility
   const getNumTimeFromStrTime = (str_time:string) : number => {
     const ary = str_time.split(':');
     const time = parseInt(ary[0],10)*60 + parseInt(ary[1],10);
@@ -83,7 +111,7 @@ const App: React.FC = () => {
 
   const calcTotalRestTime = () : number => {
     let total_rest_time : number = 0;
-    if(att_db_data.rest_times.length > 0)
+    if(att_db_data.rest_times != null)
     {
       for (var item of att_db_data.rest_times)
       {
@@ -98,7 +126,7 @@ const App: React.FC = () => {
 
   const calcTotalGoOutTime = () : number => {
     let total_go_out_time : number = 0;
-    if(att_db_data.go_out_times.length>0)
+    if(att_db_data.go_out_times!=null)
     {
       for (var item of att_db_data.go_out_times)
       {
@@ -118,7 +146,21 @@ const App: React.FC = () => {
     }
     return total_work_time;
   }
+  const getStrDate = () => {
+    const date = new Date();
+    return date.getFullYear() + "/" + ('0'+(date.getMonth()+1)).slice(-2) + "/" + ('0'+date.getDate()).slice(-2) + "(" + STR_DAY_OF_WEEK_ARRAY[date.getDay()] + ")";
+  }
 
+  const getStrTodayDate = () : string => {
+    const current_date = new Date();
+    const str_current_date =  current_date.getFullYear() + "/" + ('0'+(current_date.getMonth()+1)).slice(-2) + "/" + ('0'+current_date.getDate()).slice(-2);
+    return str_current_date;
+  }
+
+  const getStrNowTime = () : string => {
+    const current_date = new Date();
+    return ('0' + current_date.getHours()).slice(-2) + ":" + ('0' + current_date.getMinutes()).slice(-2);
+  }
   /**************************************************************************************************
   *useEffect
   **************************************************************************************************/
@@ -148,15 +190,15 @@ const App: React.FC = () => {
   },[]);
   //出退勤データ関係
   useEffect(() => {
-    const current_date = new Date();
-    const str_current_date =  "2021/06/24";//current_date.getFullYear() + "/" + ('0'+current_date.getMonth()).slice(-2) + "/" + ('0'+current_date.getDate()).slice(-2);
+    const str_current_date =  getStrTodayDate();
     console.log("search "+str_current_date);
-    getTodayInfo(str_current_date).then((value:DATABASE_FORMAT) => {
+    getDateInfo(str_current_date).then((value:DATABASE_FORMAT) => {
       setAttDbData(value);
       console.log(att_db_data);
-
-
-
+    },(reason) => {
+      console.log("att info nothing");
+      const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null}
+      setAttDbData(value);
     });
   },[]);
   /**************************************************************************************************
@@ -165,6 +207,7 @@ const App: React.FC = () => {
 
   const click_commuting_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_commuting_btn");
+    createAttInfo();
   }
   const click_leave_work_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_leave_work_btn");
@@ -213,7 +256,7 @@ const App: React.FC = () => {
         <Grid item xs={6} className="grid-contents">
           {/*ボタンの上の編集しようとしている日付の表示*/}
           <Grid container className="grid-date-line" justify="center" alignItems="center">
-            {currentDate}
+            {getStrDate()}
           </Grid>
           {/*ボタンのレイアウト */}
             <Buttons rest_text={restBtnText} go_out_text={GoOutBtnText}

@@ -5,7 +5,7 @@ import './AttDetail.css';
 
 
 const AttDetail = (props:ATT_DETAIL_PARAM) => {
-
+    console.log("[Detail] props.date : "+props.date);
     return (
         <div className="att-detail-top">
             <h2 className="att-detail-date">{props.date}</h2>
