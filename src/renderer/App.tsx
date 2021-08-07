@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [restBtnText,setRestBtnText] = useState("休憩開始");
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
-  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
+  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null,_id:null});
   //const [datastore,setDataStore] = useState(db); //もしかしたら必要になるかも
   const STR_DAY_OF_WEEK_ARRAY = [ "日", "月", "火", "水", "木", "金", "土" ];
 
@@ -41,11 +41,13 @@ const App: React.FC = () => {
           if(doc.length > 0)
           {
             const data:DATABASE_FORMAT = doc[0];
+            console.log(doc[0]);
             //DEBUG
             console.log("db.find:"+doc.length);
             if(data != null)
             {
               console.log(data);
+              console.log("_id : "+data._id);
               console.log("date : "+data.date);
               console.log("commuting : "+data.commuting);
               console.log("leave_work : "+data.leave_work);
@@ -87,7 +89,6 @@ const App: React.FC = () => {
     {
       console.log("already set commuting");
     }
-    
   }
 
   //update
@@ -197,7 +198,7 @@ const App: React.FC = () => {
       console.log(att_db_data);
     },(reason) => {
       console.log("att info nothing");
-      const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null}
+      const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null,_id:null}
       setAttDbData(value);
     });
   },[]);

@@ -53,4 +53,5 @@ export interface DATABASE_FORMAT {
     leave_work:string|null,
     rest_times:[START_END_TIMES]|null,
     go_out_times:[START_END_TIMES]|null,
+    _id:string|null,
 }
