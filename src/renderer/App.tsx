@@ -27,7 +27,11 @@ const App: React.FC = () => {
   *関数群
   **************************************************************************************************/
   //database access
-  //
+  /**
+   * 引数の日付の勤怠情報を取得します
+   * @param str_date 勤怠情報を取得したい日付。ex. "2021/6/21"
+   * @returns Promise<DATABASE_FORMAT>
+   */
   const getDateInfo = (str_date:string) => {
     return new Promise<DATABASE_FORMAT>((resolve,reject) => {
       db.find({date:str_date},(err:Error|null,doc:any[]) => {
@@ -75,23 +79,62 @@ const App: React.FC = () => {
       })
     } )
   }
-
   //create
+  /**
+   * 出勤ボタンを押すときに呼ばれる。出勤情報のみをセットしてデータベースに新規保存
+   */
   const createAttInfo = () => {
     if(att_db_data.commuting == null)
     {
       const str_now_time = getStrNowTime();
       att_db_data.commuting = str_now_time;
       console.log("createAttInfo:"+att_db_data);
-      db.insert(att_db_data);
+      db.insert(att_db_data,(error:Error|null,doc:DATABASE_FORMAT) => {
+        if(error == null)
+        {
+          console.log("db.insert:"+att_db_data);
+        }
+      });
     }
     else
     {
       console.log("already set commuting");
+      //testのため
+      updateCommuting();
     }
   }
-
   //update
+  /**
+   * 出勤情報の更新
+   */
+  const updateCommuting = () => {
+    if(att_db_data.commuting != null)
+    {
+      const str_now_time = getStrNowTime();
+      //次のように新しい変数に更新情報を入れて、setAttDbDataでセットしないと再レンダリングされない
+      let update_data : DATABASE_FORMAT;
+      update_data = {...att_db_data};
+      update_data.commuting = str_now_time;
+      const options = {};
+      db.update({date:update_data.date},update_data,options,(error:Error|null,num_of_docs:number,upsert:boolean) => {
+        if(error==null)
+        {
+          console.log("db.insert");
+          console.log(update_data);
+          setAttDbData(update_data);
+          console.log(att_db_data);
+        }
+        else
+        {
+          console.log("db.insert failed : "+error);
+        }
+      });
+    }
+    else
+    {
+      console.log("nothing commuting date");
+    }
+  }
 
   //delete
 
