@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [restBtnText,setRestBtnText] = useState("休憩開始");
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
-  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null,_id:null});
+  const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
   //const [datastore,setDataStore] = useState(db); //もしかしたら必要になるかも
   const STR_DAY_OF_WEEK_ARRAY = [ "日", "月", "火", "水", "木", "金", "土" ];
 
@@ -51,7 +51,6 @@ const App: React.FC = () => {
             if(data != null)
             {
               console.log(data);
-              console.log("_id : "+data._id);
               console.log("date : "+data.date);
               console.log("commuting : "+data.commuting);
               console.log("leave_work : "+data.leave_work);
@@ -73,6 +72,7 @@ const App: React.FC = () => {
           }
           else
           {
+            console.log("empty docs");
             reject("empty docs");
           }
         }
@@ -87,20 +87,27 @@ const App: React.FC = () => {
     if(att_db_data.commuting == null)
     {
       const str_now_time = getStrNowTime();
-      att_db_data.commuting = str_now_time;
-      console.log("createAttInfo:"+att_db_data);
-      db.insert(att_db_data,(error:Error|null,doc:DATABASE_FORMAT) => {
+      let update_data : DATABASE_FORMAT;
+      update_data = {...att_db_data};
+      update_data.commuting = str_now_time;
+      console.log("createAttInfo:"+update_data);
+      db.insert(update_data,(error:Error|null,doc:DATABASE_FORMAT) => {
         if(error == null)
         {
-          console.log("db.insert:"+att_db_data);
+          console.log("db.insert:");
+          console.log(update_data);
+          setAttDbData(update_data);
+        }
+        else
+        {
+          console.log(error);
         }
       });
     }
     else
     {
       console.log("already set commuting");
-      //testのため
-      updateCommuting();
+      
     }
   }
   //update
@@ -119,14 +126,13 @@ const App: React.FC = () => {
       db.update({date:update_data.date},update_data,options,(error:Error|null,num_of_docs:number,upsert:boolean) => {
         if(error==null)
         {
-          console.log("db.insert");
+          console.log("updateCommuting success");
           console.log(update_data);
           setAttDbData(update_data);
-          console.log(att_db_data);
         }
         else
         {
-          console.log("db.insert failed : "+error);
+          console.log("updateCommuting failed : "+error);
         }
       });
     }
@@ -134,6 +140,46 @@ const App: React.FC = () => {
     {
       console.log("nothing commuting date");
     }
+  }
+
+  const updateLeaveWork = (is_force:boolean) => {
+    return new Promise<boolean>((resolve,reject) => {
+      //出勤している記録がないと退勤を
+      if(att_db_data.commuting != null)
+      {
+        const str_now_time = getStrNowTime();
+        let update_data : DATABASE_FORMAT;
+        update_data = {...att_db_data};
+        if( (att_db_data.leave_work == null) || is_force)
+        {
+          update_data.leave_work = str_now_time;
+          const options = {};
+          db.update({date:update_data.date},update_data,options,(error:Error|null,num_of_docs:number,upsert:boolean) => {
+            if(error==null)
+            {
+              console.log("updateLeaveWork Success");
+              console.log(update_data);
+              setAttDbData(update_data);
+              resolve(true);
+            }
+            else
+            {
+              console.log("updateLeaveWork failed : "+error);
+              reject("db.update failed");
+            }
+          });
+        }
+        else
+        {
+          console.log("already exists leave time & is_force = false");
+          resolve(false);
+        }
+      }
+      else
+      {
+        reject("commuting time does not exist");
+      }
+    });
   }
 
   //delete
@@ -241,7 +287,7 @@ const App: React.FC = () => {
       console.log(att_db_data);
     },(reason) => {
       console.log("att info nothing");
-      const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null,_id:null}
+      const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null}
       setAttDbData(value);
     });
   },[]);
@@ -255,6 +301,15 @@ const App: React.FC = () => {
   }
   const click_leave_work_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_leave_work_btn");
+    updateLeaveWork(false).then((value:boolean) => {
+      if(!value)
+      {
+        //すでに退勤情報が存在している場合
+        console.log("leave work time already exists!. Message box show");
+      }
+    },(reason) => {
+
+    });
   }
   const click_rest_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_rest_btn");
