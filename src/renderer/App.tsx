@@ -94,8 +94,6 @@ const App: React.FC = () => {
       db.insert(update_data,(error:Error|null,doc:DATABASE_FORMAT) => {
         if(error == null)
         {
-          console.log("db.insert:");
-          console.log(update_data);
           setAttDbData(update_data);
         }
         else
@@ -107,7 +105,6 @@ const App: React.FC = () => {
     else
     {
       console.log("already set commuting");
-      
     }
   }
   //update
@@ -126,8 +123,6 @@ const App: React.FC = () => {
       db.update({date:update_data.date},update_data,options,(error:Error|null,num_of_docs:number,upsert:boolean) => {
         if(error==null)
         {
-          console.log("updateCommuting success");
-          console.log(update_data);
           setAttDbData(update_data);
         }
         else
@@ -141,15 +136,20 @@ const App: React.FC = () => {
       console.log("nothing commuting date");
     }
   }
-
+  /**
+   * 退勤時間を追加して更新
+   * @param is_force 強制的に上書きするかどうか
+   * @returns Promise<boolean>
+   */
   const updateLeaveWork = (is_force:boolean) => {
     return new Promise<boolean>((resolve,reject) => {
-      //出勤している記録がないと退勤を
+      //出勤している記録がないと退勤をさせない
       if(att_db_data.commuting != null)
       {
         const str_now_time = getStrNowTime();
         let update_data : DATABASE_FORMAT;
         update_data = {...att_db_data};
+        //退勤処理がされてない、または強制的に書き変える場合はupdate
         if( (att_db_data.leave_work == null) || is_force)
         {
           update_data.leave_work = str_now_time;
@@ -157,8 +157,6 @@ const App: React.FC = () => {
           db.update({date:update_data.date},update_data,options,(error:Error|null,num_of_docs:number,upsert:boolean) => {
             if(error==null)
             {
-              console.log("updateLeaveWork Success");
-              console.log(update_data);
               setAttDbData(update_data);
               resolve(true);
             }
@@ -181,24 +179,153 @@ const App: React.FC = () => {
       }
     });
   }
-
+  /**
+   * 休憩スタートの時間を追加して更新
+   * @param str_now_time 現在時刻の文字列
+   * @returns Promise<boolean>
+   */
+  const updateRestStartTime = (str_now_time:string) => {
+    return new Promise<boolean>((resolve,reject) => {
+      let update_data : DATABASE_FORMAT;
+      update_data = {...att_db_data};
+      //この場合、新規にSTART_END_TIMES要素を作成
+      const add_rest_time:START_END_TIMES = {start:str_now_time,end:null};
+      let update_rest_times:[START_END_TIMES];
+      //休憩が１個もない場合もあるので、ある場合とない場合で処理を変更
+      if(update_data.rest_times != null)
+      {
+        update_rest_times = {...update_data.rest_times};
+        update_rest_times.push(add_rest_time);
+      }
+      else
+      {
+        update_rest_times = [add_rest_time];
+      }
+      update_data.rest_times = update_rest_times;
+      db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
+        if(error==null)
+        {
+          console.log("updateRestStartTime Success");
+          setAttDbData(update_data);
+          resolve(true);
+        }
+        else
+        {
+          console.log("updateRestStartTime failed : "+error);
+          reject("db.update failed");
+        }
+      });
+    });
+  }
+  /**
+   * 休憩終了の時間を追加して更新
+   * @param str_now_time 現在時刻の文字列
+   * @returns Promise<boolean>
+   */
+  const updateRestEndTime = (str_now_time:string) => {
+    return new Promise<boolean>((resolve,reject) => {
+      let update_data : DATABASE_FORMAT;
+      update_data = {...att_db_data};
+      if(update_data.rest_times != null)
+      {
+        if(update_data.rest_times[update_data.rest_times.length-1].end == null)
+        {
+          //今の時間を追加
+          update_data.rest_times[update_data.rest_times.length-1].end = str_now_time;
+          db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
+            if(error==null)
+            {
+              setAttDbData(update_data);
+              resolve(true);
+            }
+            else
+            {
+              console.log("updateRestTimes [REST_END] failed : "+error);
+              reject("db.update failed");
+            }
+          });
+        }
+        else
+        {
+          reject("corresponding rest start time not exist");
+        }
+      }
+      else
+      {
+        reject("rest times array is null");
+      }
+    });
+  }
+  /**
+   * 休憩時間を更新
+   * @param state REST_STARTまたはREST_ENDのみ有効 休憩開始か終了か
+   * @returns Promise<boolean>
+   */
+  const updateRestTimes = (state:ACTION_STATE) => {
+    return new Promise<boolean>((resolve,reject) => {
+      //出勤している記録がないと休憩をさせない
+      if(att_db_data.commuting != null)
+      {
+        const str_now_time = getStrNowTime();
+        let update_data : DATABASE_FORMAT;
+        update_data = {...att_db_data};
+        //休憩開始か終了か
+        if(state == ACTION_STATE.REST_START)
+        {
+          updateRestStartTime(str_now_time).then((val:boolean) => {
+            resolve(val);
+          },(reason:string) => {
+            reject(reason);
+          })
+        }
+        else if(state == ACTION_STATE.REST_END)
+        {
+          updateRestEndTime(str_now_time).then((val:boolean) => {
+            resolve(val);
+          },(reason:string) => {
+            reject(reason);
+          })
+        }
+        else
+        {
+          reject("updateRestTimes state failed");
+        }
+      }
+      else
+      {
+        reject("commuting time does not exist");
+      }
+    });
+  }
   //delete
 
   //utility
+  /**
+   * 文字列の時間から、0時を0としての総分数を計算
+   * @param str_time 
+   * @returns 総分数
+   */
   const getNumTimeFromStrTime = (str_time:string) : number => {
     const ary = str_time.split(':');
     const time = parseInt(ary[0],10)*60 + parseInt(ary[1],10);
     console.log("from "+str_time+" to "+time);
     return time;
   }
-
+  /**
+   * 総分数から時間を計算
+   * @param num_time  総分数
+   * @returns 文字列の時間
+   */
   const getStrTimeFromNumTime = (num_time:number) : string => {
     const hour = Math.floor(num_time/60);
     const min = num_time % 60;
     const str_time = hour + ":" + min;
     return str_time;
   }
-
+  /**
+   * 総休憩時間を計算
+   * @returns 総休憩時間
+   */
   const calcTotalRestTime = () : number => {
     let total_rest_time : number = 0;
     if(att_db_data.rest_times != null)
@@ -213,7 +340,10 @@ const App: React.FC = () => {
     }
     return total_rest_time;
   }
-
+  /**
+   * 総外出時間を計算
+   * @returns 総外出時間
+   */
   const calcTotalGoOutTime = () : number => {
     let total_go_out_time : number = 0;
     if(att_db_data.go_out_times!=null)
@@ -228,6 +358,10 @@ const App: React.FC = () => {
     }
     return total_go_out_time;
   }
+  /**
+   * 総勤務時間の計算
+   * @returns 総勤務時間
+   */
   const calcTotalWorkTime = () : number => {
     let total_work_time : number = 0;
     if((att_db_data.commuting != null) && (att_db_data.leave_work != null))
@@ -236,20 +370,48 @@ const App: React.FC = () => {
     }
     return total_work_time;
   }
-  const getStrDate = () => {
-    const date = new Date();
+  /**
+   * 指定した日付を文字列で返却
+   * @param date 文字列にしたいDate変数
+   * @returns 変換した文字列日付
+   */
+  const getStrDate = (date:Date) : string => {
     return date.getFullYear() + "/" + ('0'+(date.getMonth()+1)).slice(-2) + "/" + ('0'+date.getDate()).slice(-2) + "(" + STR_DAY_OF_WEEK_ARRAY[date.getDay()] + ")";
   }
-
+  /**
+   * 文字列で今日の日付を返却
+   * @returns 今日の日付
+   */
   const getStrTodayDate = () : string => {
     const current_date = new Date();
     const str_current_date =  current_date.getFullYear() + "/" + ('0'+(current_date.getMonth()+1)).slice(-2) + "/" + ('0'+current_date.getDate()).slice(-2);
     return str_current_date;
   }
-
+  /**
+   * 現在の時分を文字列として返却
+   * @returns 今の時分の文字列
+   */
   const getStrNowTime = () : string => {
     const current_date = new Date();
     return ('0' + current_date.getHours()).slice(-2) + ":" + ('0' + current_date.getMinutes()).slice(-2);
+  }
+
+  const determineRestBtn = (att:DATABASE_FORMAT) => {
+    if(att.rest_times != null)
+    {
+      if((att.rest_times[att.rest_times.length-1].start!=null)&&(att.rest_times[att.rest_times.length-1].end == null))
+      {
+        setRestBtnText("休憩終了");
+      }
+      else
+      {
+        setRestBtnText("休憩開始");
+      }
+    }
+    else
+    {
+      setRestBtnText("休憩開始");
+    }
   }
   /**************************************************************************************************
   *useEffect
@@ -284,6 +446,7 @@ const App: React.FC = () => {
     console.log("search "+str_current_date);
     getDateInfo(str_current_date).then((value:DATABASE_FORMAT) => {
       setAttDbData(value);
+      determineRestBtn(value);
       console.log(att_db_data);
     },(reason) => {
       console.log("att info nothing");
@@ -315,10 +478,12 @@ const App: React.FC = () => {
     console.log("click_rest_btn");
     if(restBtnText=="休憩開始")
     {
+      updateRestTimes(ACTION_STATE.REST_START);
       setRestBtnText("休憩終了");
     }
     else
     {
+      updateRestTimes(ACTION_STATE.REST_END);
       setRestBtnText("休憩開始");
     }
   }
@@ -355,7 +520,7 @@ const App: React.FC = () => {
         <Grid item xs={6} className="grid-contents">
           {/*ボタンの上の編集しようとしている日付の表示*/}
           <Grid container className="grid-date-line" justify="center" alignItems="center">
-            {getStrDate()}
+            {getStrTodayDate()}
           </Grid>
           {/*ボタンのレイアウト */}
             <Buttons rest_text={restBtnText} go_out_text={GoOutBtnText}
