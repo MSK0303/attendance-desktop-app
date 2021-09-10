@@ -41,3 +41,16 @@ export interface ATT_DETAIL_PARAM {
     go_out_time: string|undefined,
     total_work_time: string|undefined,
 }
+
+export interface START_END_TIMES {
+    start:string|null,
+    end:string|null,
+}
+
+export interface DATABASE_FORMAT {
+    date:string,
+    commuting:string|null,
+    leave_work:string|null,
+    rest_times:[START_END_TIMES]|null,
+    go_out_times:[START_END_TIMES]|null,
+}
