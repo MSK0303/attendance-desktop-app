@@ -10,7 +10,7 @@ const History = (props:HISTORY_BUFFER) => {
 
     const createHistoryMessage = (time:string,action_type:ACTION_STATE) => {
         let message:string|null = "";
-        console.log("time:"+time);
+        //console.log("time:"+time);
         switch(action_type)
         {
             case ACTION_STATE.COMMUTING:
@@ -38,14 +38,14 @@ const History = (props:HISTORY_BUFFER) => {
         return message;
     }
 
-    console.log(props.buff);
+    //console.log(props.buff);
 
     props.buff.map((value:HISTORY_OBJECT,key:number) => {
         const day:string = value.date.getFullYear() + "/" + ('0'+value.date.getMonth()).slice(-2) + "/" + ('0'+value.date.getDate()).slice(-2);
         const time:string = ('0'+value.date.getHours()).slice(-2) + ":" + ('0'+value.date.getMinutes()).slice(-2);
         
-        console.log("day:"+day);
-        console.log("time:"+time);
+        // console.log("day:"+day);
+        // console.log("time:"+time);
 
         if(pre_day!=day) rend.push(<div className="history_date">{day}</div>);
         const message = createHistoryMessage(time,value.action_type);
