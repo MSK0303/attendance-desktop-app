@@ -1,9 +1,21 @@
+/**
+ * @file AttDetail.tsx
+ * @brief 出退勤の詳細処理
+ * @author Kazuya Yoshihara
+ * @date 2021/09/10
+ */
+
 import React,{useState,useEffect} from 'react'
 import {Grid,Table,TableBody,TableCell,TableContainer,TableRow,Paper} from '@material-ui/core';
 import {ATT_DETAIL_PARAM} from '../../../types';
 import './AttDetail.css';
 
-
+/**
+ * AttDetail
+ * @breif 出退勤の詳細を記述するComponent
+ * @param props 詳細情報
+ * @returns JSX
+ */
 const AttDetail = (props:ATT_DETAIL_PARAM) => {
     console.log("[Detail] props.date : "+props.date);
     return (

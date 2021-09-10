@@ -1,3 +1,9 @@
+/**
+ * @file App.tsx
+ * @brief アプリのメイン処理
+ * @author Kazuya Yoshihara
+ * @date 2021/09/10
+ */
 import React,{useState,useEffect} from 'react'
 import './App.css'
 import { hot } from 'react-hot-loader/root'
@@ -7,18 +13,26 @@ import History from "./components/History/History";
 import Buttons from './components/Buttons/Buttons';
 import AttCalendar from './components/AttCalendar/AttCalendar';
 import AttDetail from './components/AttDetail/AttDetail';
-
-//react
 import {Grid} from '@material-ui/core';
 
 import db from './datastore';
 import Nedb from "nedb";
 
+/**
+ * App
+ * @brief メイン処理を記述するComponent
+ * @returns JSX
+ */
 const App: React.FC = () => {
+  /** 休憩ボタンの文字 */
   const [restBtnText,setRestBtnText] = useState("休憩開始");
+  /** 外出ボタンの文字 */
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
+  /** 履歴30件の情報 */
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
+  /** 選択している出退勤の情報 */
   const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
+  /** 曜日文字の配列 */
   const STR_DAY_OF_WEEK_ARRAY = [ "日", "月", "火", "水", "木", "金", "土" ];
 
   /**************************************************************************************************
@@ -26,7 +40,8 @@ const App: React.FC = () => {
   **************************************************************************************************/
   //database access
   /**
-   * 引数の日付の勤怠情報を取得します
+   * getDateInfo
+   * @brief 引数の日付の勤怠情報を取得します
    * @param str_date 勤怠情報を取得したい日付。ex. "2021/6/21"
    * @returns Promise<DATABASE_FORMAT>
    */
@@ -79,7 +94,8 @@ const App: React.FC = () => {
   }
   //create
   /**
-   * 出勤ボタンを押すときに呼ばれる。出勤情報のみをセットしてデータベースに新規保存
+   * createAttInfo
+   * @brief 出勤ボタンを押すときに呼ばれる。出勤情報のみをセットしてデータベースに新規保存
    */
   const createAttInfo = () => {
     if(att_db_data.commuting == null)
@@ -107,7 +123,8 @@ const App: React.FC = () => {
   }
   //update
   /**
-   * 出勤情報の更新
+   * updateCommuting
+   * @brief 出勤情報の更新
    */
   const updateCommuting = () => {
     if(att_db_data.commuting != null)
@@ -135,7 +152,8 @@ const App: React.FC = () => {
     }
   }
   /**
-   * 退勤時間を追加して更新
+   * updateLeaveWork
+   * @brief 退勤時間を追加して更新
    * @param is_force 強制的に上書きするかどうか
    * @returns Promise<boolean>
    */
@@ -178,7 +196,8 @@ const App: React.FC = () => {
     });
   }
   /**
-   * 休憩スタートの時間を追加して更新
+   * updateRestStartTime
+   * @brief 休憩スタートの時間を追加して更新
    * @param str_now_time 現在時刻の文字列
    * @returns Promise<boolean>
    */
@@ -216,7 +235,8 @@ const App: React.FC = () => {
     });
   }
   /**
-   * 休憩終了の時間を追加して更新
+   * updateRestEndTime
+   * @brief 休憩終了の時間を追加して更新
    * @param str_now_time 現在時刻の文字列
    * @returns Promise<boolean>
    */
@@ -255,7 +275,8 @@ const App: React.FC = () => {
     });
   }
   /**
-   * 休憩時間を更新
+   * updateRestTimes
+   * @brief 休憩時間を更新
    * @param state REST_STARTまたはREST_ENDのみ有効 休憩開始か終了か
    * @returns Promise<boolean>
    */
@@ -295,7 +316,8 @@ const App: React.FC = () => {
     });
   }
   /**
-   * 外出スタートの時間を追加して更新
+   * updateGoOutStartTime
+   * @brief 外出スタートの時間を追加して更新
    * @param str_now_time 現在時刻の文字列
    * @returns Promise<boolean>
    */
@@ -332,6 +354,12 @@ const App: React.FC = () => {
       });
     });
   }
+  /**
+   * updateGoOutEndTime
+   * @brief 外出時間を更新
+   * @param str_now_time 
+   * @returns Promise<boolean>
+   */
   const updateGoOutEndTime = (str_now_time:string) => {
     return new Promise<boolean>((resolve,reject) => {
       let update_data : DATABASE_FORMAT;
@@ -367,7 +395,8 @@ const App: React.FC = () => {
     });
   }
   /**
-   * 外出時間を記録
+   * updateGoOutTIme
+   * @brief 外出時間を記録
    * @param state GO_OUT_STARTまたはGO_OUT_ENDのみ有効　外出開始か終了か
    * @returns Promise<boolean>
    */
@@ -408,8 +437,9 @@ const App: React.FC = () => {
 
   //utility
   /**
-   * 文字列の時間から、0時を0としての総分数を計算
-   * @param str_time 
+   * getNumTimeFromStrTime
+   * @brief 文字列の時間から、0時を0としての総分数を計算
+   * @param str_time 文字列の時間
    * @returns 総分数
    */
   const getNumTimeFromStrTime = (str_time:string) : number => {
@@ -419,7 +449,8 @@ const App: React.FC = () => {
     return time;
   }
   /**
-   * 総分数から時間を計算
+   * getStrTimeFromNumTime
+   * @brief 総分数から時間を計算
    * @param num_time  総分数
    * @returns 文字列の時間
    */
@@ -430,7 +461,8 @@ const App: React.FC = () => {
     return str_time;
   }
   /**
-   * 総休憩時間を計算
+   * calcTotalRestTime
+   * @brief 総休憩時間を計算
    * @returns 総休憩時間
    */
   const calcTotalRestTime = () : number => {
@@ -448,7 +480,8 @@ const App: React.FC = () => {
     return total_rest_time;
   }
   /**
-   * 総外出時間を計算
+   * calcTotalGoOutTime
+   * @brief 総外出時間を計算
    * @returns 総外出時間
    */
   const calcTotalGoOutTime = () : number => {
@@ -466,7 +499,8 @@ const App: React.FC = () => {
     return total_go_out_time;
   }
   /**
-   * 総勤務時間の計算
+   * calcTotalWorkTime
+   * @brief 総勤務時間の計算
    * @returns 総勤務時間
    */
   const calcTotalWorkTime = () : number => {
@@ -478,7 +512,8 @@ const App: React.FC = () => {
     return total_work_time;
   }
   /**
-   * 指定した日付を文字列で返却
+   * getStrDate
+   * @brief 指定した日付を文字列で返却
    * @param date 文字列にしたいDate変数
    * @returns 変換した文字列日付
    */
@@ -486,7 +521,8 @@ const App: React.FC = () => {
     return date.getFullYear() + "/" + ('0'+(date.getMonth()+1)).slice(-2) + "/" + ('0'+date.getDate()).slice(-2) + "(" + STR_DAY_OF_WEEK_ARRAY[date.getDay()] + ")";
   }
   /**
-   * 文字列で今日の日付を返却
+   * getStrTodayDate
+   * @brief 文字列で今日の日付を返却
    * @returns 今日の日付
    */
   const getStrTodayDate = () : string => {
@@ -495,14 +531,19 @@ const App: React.FC = () => {
     return str_current_date;
   }
   /**
-   * 現在の時分を文字列として返却
+   * getStrNowTime
+   * @brief 現在の時分を文字列として返却
    * @returns 今の時分の文字列
    */
   const getStrNowTime = () : string => {
     const current_date = new Date();
     return ('0' + current_date.getHours()).slice(-2) + ":" + ('0' + current_date.getMinutes()).slice(-2);
   }
-
+  /**
+   * determineRestBtn
+   * @brief 休憩ボタンの文字列を決定
+   * @param att 出退勤の情報
+   */
   const determineRestBtn = (att:DATABASE_FORMAT) => {
     if(att.rest_times != null)
     {
@@ -520,7 +561,11 @@ const App: React.FC = () => {
       setRestBtnText("休憩開始");
     }
   }
-
+  /**
+   * determineGoOutBtn
+   * @brief 外出ボタンの文字列を決定
+   * @param att 出退勤の情報
+   */
   const determineGoOutBtn = (att:DATABASE_FORMAT) => {
     if(att.go_out_times != null)
     {
@@ -541,7 +586,6 @@ const App: React.FC = () => {
   /**************************************************************************************************
   *useEffect
   **************************************************************************************************/
-
   //history関係
   useEffect(() => {
     //test
@@ -583,11 +627,20 @@ const App: React.FC = () => {
   /**************************************************************************************************
   *ui handler
   **************************************************************************************************/
-
+  /**
+   * click_commuting_btn
+   * @brief 出勤ボタンをクリック
+   * @param e マウスイベント
+   */
   const click_commuting_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_commuting_btn");
     createAttInfo();
   }
+  /**
+   * click_leave_work_btn
+   * @brief 退勤ボタンをクリック
+   * @param e マウスイベント
+   */
   const click_leave_work_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_leave_work_btn");
     updateLeaveWork(false).then((value:boolean) => {
@@ -600,6 +653,11 @@ const App: React.FC = () => {
 
     });
   }
+  /**
+   * click_rest_btn
+   * @brief 休憩ボタンをクリック
+   * @param e マウスイベント
+   */
   const click_rest_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_rest_btn");
     if(restBtnText=="休憩開始")
@@ -613,6 +671,11 @@ const App: React.FC = () => {
       setRestBtnText("休憩開始");
     }
   }
+  /**
+   * click_go_out_btn
+   * @brief 外出ボタンをクリック
+   * @param e マウスイベント
+   */
   const click_go_out_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_go_out_btn");
     if(GoOutBtnText=="外出開始")

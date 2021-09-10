@@ -1,10 +1,20 @@
+/**
+ * @file Buttons.tsx
+ * @brief ボタンの処理
+ * @author Kazuya Yoshihara
+ * @date 2021/09/10
+ */
 import React,{useState} from 'react'
 import {Grid,Button} from '@material-ui/core';
 import './Buttons.css'
 import { BUTTONS_PARAM } from 'src/types';
-
+/**
+ * Buttons
+ * @brief ボタン処理を記述するComponent
+ * @param props ボタンに関するパラメータ
+ * @returns JSX
+ */
 const Buttons = (props:BUTTONS_PARAM) => {
-
     return (
         <Grid container className="grid-buttons">
             <Grid container justify="center">
