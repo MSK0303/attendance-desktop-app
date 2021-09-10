@@ -9,9 +9,8 @@ import AttCalendar from './components/AttCalendar/AttCalendar';
 import AttDetail from './components/AttDetail/AttDetail';
 
 //react
-import {Grid,Button} from '@material-ui/core';
+import {Grid} from '@material-ui/core';
 
-//import {getSampleData,setSampleData} from "../data/DatabaseManager";
 import db from './datastore';
 import Nedb from "nedb";
 
@@ -20,7 +19,6 @@ const App: React.FC = () => {
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
   const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
-  //const [datastore,setDataStore] = useState(db); //もしかしたら必要になるかも
   const STR_DAY_OF_WEEK_ARRAY = [ "日", "月", "火", "水", "木", "金", "土" ];
 
   /**************************************************************************************************
@@ -240,7 +238,7 @@ const App: React.FC = () => {
             }
             else
             {
-              console.log("updateRestTimes [REST_END] failed : "+error);
+              console.log("updateRestEndTime failed : "+error);
               reject("db.update failed");
             }
           });
@@ -264,11 +262,10 @@ const App: React.FC = () => {
   const updateRestTimes = (state:ACTION_STATE) => {
     return new Promise<boolean>((resolve,reject) => {
       //出勤している記録がないと休憩をさせない
-      if(att_db_data.commuting != null)
+      //かつ、退勤前
+      if( (att_db_data.commuting != null) && (att_db_data.leave_work == null) )
       {
         const str_now_time = getStrNowTime();
-        let update_data : DATABASE_FORMAT;
-        update_data = {...att_db_data};
         //休憩開始か終了か
         if(state == ACTION_STATE.REST_START)
         {
@@ -293,7 +290,117 @@ const App: React.FC = () => {
       }
       else
       {
-        reject("commuting time does not exist");
+        reject("commuting time does not exist|leave work time already exist");
+      }
+    });
+  }
+  /**
+   * 外出スタートの時間を追加して更新
+   * @param str_now_time 現在時刻の文字列
+   * @returns Promise<boolean>
+   */
+  const updateGoOutStartTime = (str_now_time:string) => {
+    return new Promise<boolean>((resolve,reject) => {
+      let update_data : DATABASE_FORMAT;
+      update_data = {...att_db_data};
+      //新規にSTART_END_TIMES要素を作成
+      const add_go_out_time:START_END_TIMES = {start:str_now_time,end:null};
+      let update_go_out_times:[START_END_TIMES];
+      //外出が１つもない場合もあるので、ある場合とない場合で処理を変更
+      if(update_data.go_out_times != null)
+      {
+        update_go_out_times = {...update_data.go_out_times};
+        update_go_out_times.push(add_go_out_time);
+      }
+      else
+      {
+        update_go_out_times = [add_go_out_time];
+      }
+      update_data.go_out_times = update_go_out_times;
+      db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
+        if(error==null)
+        {
+          console.log("updateGoOutStartTime Success");
+          setAttDbData(update_data);
+          resolve(true);
+        }
+        else
+        {
+          console.log("updateGoOutStartTime failed : "+error);
+          reject("db.update failed");
+        }
+      });
+    });
+  }
+  const updateGoOutEndTime = (str_now_time:string) => {
+    return new Promise<boolean>((resolve,reject) => {
+      let update_data : DATABASE_FORMAT;
+      update_data = {...att_db_data};
+      if(update_data.go_out_times != null)
+      {
+        if(update_data.go_out_times[update_data.go_out_times.length-1].end == null)
+        {
+          //今の時間を追加
+          update_data.go_out_times[update_data.go_out_times.length-1].end = str_now_time;
+          db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
+            if(error==null)
+            {
+              setAttDbData(update_data);
+              resolve(true);
+            }
+            else
+            {
+              console.log("updateGoOutEndTime failed : "+error);
+              reject("db.update failed");
+            }
+          });
+        }
+        else
+        {
+          reject("corresponding rest start time not exist");
+        }
+      }
+      else
+      {
+        reject("go out times array is null");
+      }
+    });
+  }
+  /**
+   * 外出時間を記録
+   * @param state GO_OUT_STARTまたはGO_OUT_ENDのみ有効　外出開始か終了か
+   * @returns Promise<boolean>
+   */
+  const updateGoOutTIme = (state:ACTION_STATE) => {
+    return new Promise<boolean>((resolve,reject) => {
+      //出勤後、退勤前なら外出を記録可能
+      if((att_db_data.commuting != null) && (att_db_data.leave_work == null))
+      {
+          const str_now_time = getStrNowTime();
+          if(state==ACTION_STATE.GO_OUT_START)
+          {
+            updateGoOutStartTime(str_now_time).then((val:boolean) => {
+              resolve(val);
+            },(reason:string) => {
+              reject(reason);
+            })
+          }
+          else if(state==ACTION_STATE.GO_OUT_END)
+          {
+            updateGoOutEndTime(str_now_time).then((val:boolean) => {
+              resolve(val);
+            },(reason:string) => {
+              reject(reason);
+            })
+          }
+          else
+          {
+            reject("updateGoOutTIme state failed");
+          }
+      }
+      else
+      {
+        reject("commuting time does not exist|leave work time already exist");
       }
     });
   }
@@ -413,6 +520,24 @@ const App: React.FC = () => {
       setRestBtnText("休憩開始");
     }
   }
+
+  const determineGoOutBtn = (att:DATABASE_FORMAT) => {
+    if(att.go_out_times != null)
+    {
+      if((att.go_out_times[att.go_out_times.length-1].start!=null)&&(att.go_out_times[att.go_out_times.length-1].end == null))
+      {
+        setGoOutBtnText("外出終了");
+      }
+      else
+      {
+        setGoOutBtnText("外出開始");
+      }
+    }
+    else
+    {
+      setGoOutBtnText("外出開始");
+    }
+  }
   /**************************************************************************************************
   *useEffect
   **************************************************************************************************/
@@ -447,6 +572,7 @@ const App: React.FC = () => {
     getDateInfo(str_current_date).then((value:DATABASE_FORMAT) => {
       setAttDbData(value);
       determineRestBtn(value);
+      determineGoOutBtn(value);
       console.log(att_db_data);
     },(reason) => {
       console.log("att info nothing");
@@ -491,10 +617,12 @@ const App: React.FC = () => {
     console.log("click_go_out_btn");
     if(GoOutBtnText=="外出開始")
     {
+      updateGoOutTIme(ACTION_STATE.GO_OUT_START);
       setGoOutBtnText("外出終了");
     }
     else
     {
+      updateGoOutTIme(ACTION_STATE.GO_OUT_END);
       setGoOutBtnText("外出開始");
     }
   }
