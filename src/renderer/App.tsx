@@ -16,6 +16,7 @@ import AttDetail from './components/AttDetail/AttDetail';
 import {Grid} from '@material-ui/core';
 
 import db from './datastore';
+import history_db from './historyds';
 import Nedb from "nedb";
 
 /**
@@ -29,7 +30,7 @@ const App: React.FC = () => {
   /** 外出ボタンの文字 */
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   /** 履歴30件の情報 */
-  const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
+  const [history_buff,setHistoryBuff] = useState<HISTORY_BUFFER>({buff:[]});
   /** 選択している出退勤の情報 */
   const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
   /** 曜日文字の配列 */
@@ -435,6 +436,91 @@ const App: React.FC = () => {
   }
   //delete
 
+
+  //History Database
+  //get
+  const getHistoryDB = () => {
+    return new Promise<HISTORY_BUFFER>((resolve,reject) => {
+      history_db.find({},(err:Error|null,doc:any[]) => {
+        if(err)
+        {
+          console.log("history db.find error");
+          reject(err);
+        }
+        else
+        {
+          if(doc.length > 0)
+          {
+            console.log("get history");
+            console.log(doc);
+            if(doc != null)
+            {
+              const ret_db:HISTORY_BUFFER = {buff:[]};
+              doc.map((item) => {
+                ret_db.buff.push(item);
+              });
+              console.log(ret_db.buff);
+              resolve(ret_db);
+            }
+            else
+            {
+              console.log("empty history");
+              reject("empty history");
+            }
+          }
+        }
+      });
+    });
+  }
+  //update
+  const updateHistoryDB = (date:Date,type:ACTION_STATE) => {
+    return new Promise<boolean>((resolve,reject) => {
+      const new_hist_buff:HISTORY_BUFFER = {buff:[]};
+      //30件以上なら最初の１件を削除
+      if(history_buff.buff.length >= 30)
+      {
+        console.log("history length over 30");
+        history_db.remove({date:history_buff.buff[0].date},{},(error:Error|null,n:number) => {
+          if(error == null)
+          {
+            console.log("history db first element delete");
+            history_buff.buff.map((item,index) => {
+              if(index != 0)
+              {
+                new_hist_buff.buff.push(item);
+              }
+            });
+          }
+          else
+          {
+            reject(error);
+          }
+        });
+      }
+      else
+      {
+        //30件ないなら変更用のバッファに今までのhistoryを入れる
+        history_buff.buff.map((item) => {
+          new_hist_buff.buff.push(item);
+        });
+      }
+      //追加
+      const new_history:HISTORY_OBJECT = {date:date,action_type:type};
+      history_db.insert(new_history,(error:Error|null,doc:HISTORY_OBJECT) => {
+        if(error == null)
+        {
+          new_hist_buff.buff.push(new_history);
+          setHistoryBuff(new_hist_buff);
+        }
+        else
+        {
+          reject(error);
+          console.log(error);
+        }
+      });
+      
+    });
+  }
   //utility
   /**
    * getNumTimeFromStrTime
@@ -588,26 +674,38 @@ const App: React.FC = () => {
   **************************************************************************************************/
   //history関係
   useEffect(() => {
-    //test
-    const test_histories:HISTORY_OBJECT[] = [
-      {
-        date: new Date(2011,6,10,9,0,0),
-        action_type: ACTION_STATE.COMMUTING
-      },
-      {
-        date: new Date(2011,6,10,18,0,0),
-        action_type: ACTION_STATE.LEAVE_WORK
-      },
-      {
-        date: new Date(2011,6,11,9,0,0),
-        action_type: ACTION_STATE.COMMUTING
-      },
-      {
-        date: new Date(2011,6,11,18,0,0),
-        action_type: ACTION_STATE.LEAVE_WORK
-      }
-    ];
-    setHistoryBuff(test_histories);
+    console.log("useEffect History");
+    getHistoryDB().then((value:HISTORY_BUFFER) => {
+      console.log("Success History");
+      setHistoryBuff(value);
+    },(reason) => {
+      console.log(reason);
+      //ここでポップアップしたりしてエラーを通知
+    });
+    // //test
+    // const test_histories:HISTORY_OBJECT[] = [
+    //   {
+    //     date: new Date(2011,6,10,9,0,0),
+    //     action_type: ACTION_STATE.COMMUTING
+    //   },
+    //   {
+    //     date: new Date(2011,6,10,18,0,0),
+    //     action_type: ACTION_STATE.LEAVE_WORK
+    //   },
+    //   {
+    //     date: new Date(2011,6,11,9,0,0),
+    //     action_type: ACTION_STATE.COMMUTING
+    //   },
+    //   {
+    //     date: new Date(2011,6,11,18,0,0),
+    //     action_type: ACTION_STATE.LEAVE_WORK
+    //   }
+    // ];
+    // const new_hist:HISTORY_BUFFER = {buff:[]};
+    // history_buff.buff.map((item) => {
+    //   new_hist.buff.push(item);
+    // });
+    // setHistoryBuff(new_hist);
   },[]);
   //出退勤データ関係
   useEffect(() => {
@@ -723,7 +821,7 @@ const App: React.FC = () => {
           </Grid>
           {/*履歴画面 */}
           <Grid container className="grid-note">
-            <History buff={history_buff} />
+            {history_buff.buff != undefined ? <History buff={history_buff.buff} /> : <History buff={[]} />}
           </Grid>
         </Grid>
       </Grid>
