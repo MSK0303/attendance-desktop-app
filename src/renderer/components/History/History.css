@@ -1,6 +1,6 @@
 .history_top {
   width: 100%;
-  overflow: scroll;
+  height: 100%;
 }
 
 .history_top .history_date {

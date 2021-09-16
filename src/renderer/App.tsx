@@ -441,7 +441,7 @@ const App: React.FC = () => {
   //get
   const getHistoryDB = () => {
     return new Promise<HISTORY_BUFFER>((resolve,reject) => {
-      history_db.find({},(err:Error|null,doc:any[]) => {
+      history_db.find({}).sort({date:1}).exec((err:Error|null,doc:any[]) => {
         if(err)
         {
           console.log("history db.find error");
@@ -499,6 +499,8 @@ const App: React.FC = () => {
       }
       else
       {
+        console.log("updateHistoryDB:1");
+        console.log(history_buff);
         //30件ないなら変更用のバッファに今までのhistoryを入れる
         history_buff.buff.map((item) => {
           new_hist_buff.buff.push(item);
@@ -510,6 +512,8 @@ const App: React.FC = () => {
         if(error == null)
         {
           new_hist_buff.buff.push(new_history);
+          console.log("updateHistoryDB:1");
+          console.log(new_hist_buff);
           setHistoryBuff(new_hist_buff);
         }
         else
@@ -682,6 +686,7 @@ const App: React.FC = () => {
       console.log(reason);
       //ここでポップアップしたりしてエラーを通知
     });
+
     // //test
     // const test_histories:HISTORY_OBJECT[] = [
     //   {
@@ -732,7 +737,12 @@ const App: React.FC = () => {
    */
   const click_commuting_btn = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     console.log("click_commuting_btn");
-    createAttInfo();
+    let test_date1:Date = new Date(2021,6,26,9,0,0);
+    let act1:ACTION_STATE = ACTION_STATE.COMMUTING;
+    updateHistoryDB(test_date1,act1).then((value:boolean) => {
+      console.log("success save test1");
+    });
+    //createAttInfo();
   }
   /**
    * click_leave_work_btn
