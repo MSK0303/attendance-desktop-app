@@ -34,5 +34,6 @@
 
 .main-view .grid-top .grid-contents .grid-note {
   height: 45%;
+  overflow: auto;
 }
 /*# sourceMappingURL=App.css.map */

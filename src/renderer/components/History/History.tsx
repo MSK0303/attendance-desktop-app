@@ -57,7 +57,7 @@ const History = (props:HISTORY_BUFFER) => {
         return message;
     }
     props.buff.map((value:HISTORY_OBJECT,key:number) => {
-        const day:string = value.date.getFullYear() + "/" + ('0'+value.date.getMonth()).slice(-2) + "/" + ('0'+value.date.getDate()).slice(-2);
+        const day:string = value.date.getFullYear() + "/" + ('0'+(value.date.getMonth()+1)).slice(-2) + "/" + ('0'+value.date.getDate()).slice(-2);
         const time:string = ('0'+value.date.getHours()).slice(-2) + ":" + ('0'+value.date.getMinutes()).slice(-2);
         if(pre_day!=day) rend.push(<div className="history_date">{day}</div>);
         const message = createHistoryMessage(time,value.action_type);

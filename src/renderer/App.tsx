@@ -16,6 +16,7 @@ import AttDetail from './components/AttDetail/AttDetail';
 import {Grid} from '@material-ui/core';
 
 import db from './datastore';
+import history_db from './historyds';
 import Nedb from "nedb";
 
 /**
@@ -29,7 +30,7 @@ const App: React.FC = () => {
   /** 外出ボタンの文字 */
   const [GoOutBtnText,setGoOutBtnText] = useState("外出開始");
   /** 履歴30件の情報 */
-  const [history_buff,setHistoryBuff] = useState<HISTORY_OBJECT[]>([]);
+  const [history_buff,setHistoryBuff] = useState<HISTORY_BUFFER>({buff:[]});
   /** 選択している出退勤の情報 */
   const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
   /** 曜日文字の配列 */
@@ -58,34 +59,10 @@ const App: React.FC = () => {
           if(doc.length > 0)
           {
             const data:DATABASE_FORMAT = doc[0];
-            console.log(doc[0]);
-            //DEBUG
-            console.log("db.find:"+doc.length);
-            if(data != null)
-            {
-              console.log(data);
-              console.log("date : "+data.date);
-              console.log("commuting : "+data.commuting);
-              console.log("leave_work : "+data.leave_work);
-              if(data.rest_times != null)
-              {
-                for (var item of data.rest_times){
-                  console.log("rest start:"+item.start+","+"rest end:"+item.end);
-                }
-              }
-              if(data.go_out_times != null)
-              {
-                for (var item of data.go_out_times){
-                  console.log("go out start:"+item.start+","+"go out end:"+item.end);
-                }
-              }
-            }
-            //DEBUG ここまで
             resolve(data);
           }
           else
           {
-            console.log("empty docs");
             reject("empty docs");
           }
         }
@@ -104,10 +81,11 @@ const App: React.FC = () => {
       let update_data : DATABASE_FORMAT;
       update_data = {...att_db_data};
       update_data.commuting = str_now_time;
-      console.log("createAttInfo:"+update_data);
       db.insert(update_data,(error:Error|null,doc:DATABASE_FORMAT) => {
         if(error == null)
         {
+          updateHistoryDB(new Date(),ACTION_STATE.COMMUTING).then((value:boolean) => {
+          });
           setAttDbData(update_data);
         }
         else
@@ -173,8 +151,10 @@ const App: React.FC = () => {
           db.update({date:update_data.date},update_data,options,(error:Error|null,num_of_docs:number,upsert:boolean) => {
             if(error==null)
             {
+              updateHistoryDB(new Date(),ACTION_STATE.LEAVE_WORK).then((value:boolean) => {
+                resolve(true);
+              });
               setAttDbData(update_data);
-              resolve(true);
             }
             else
             {
@@ -207,11 +187,14 @@ const App: React.FC = () => {
       update_data = {...att_db_data};
       //この場合、新規にSTART_END_TIMES要素を作成
       const add_rest_time:START_END_TIMES = {start:str_now_time,end:null};
-      let update_rest_times:[START_END_TIMES];
+      let update_rest_times:START_END_TIMES[] = [];
       //休憩が１個もない場合もあるので、ある場合とない場合で処理を変更
       if(update_data.rest_times != null)
       {
-        update_rest_times = {...update_data.rest_times};
+        //update_rest_times = [...update_data.rest_times]; //下はこの行みたいに書けるのでは？
+        update_data.rest_times.map((item) => {
+          update_rest_times.push(item);
+        })
         update_rest_times.push(add_rest_time);
       }
       else
@@ -222,9 +205,10 @@ const App: React.FC = () => {
       db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
         if(error==null)
         {
-          console.log("updateRestStartTime Success");
+          updateHistoryDB(new Date(),ACTION_STATE.REST_START).then((value:boolean) => {
+            resolve(true);
+          });
           setAttDbData(update_data);
-          resolve(true);
         }
         else
         {
@@ -253,8 +237,10 @@ const App: React.FC = () => {
           db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
             if(error==null)
             {
+              updateHistoryDB(new Date(),ACTION_STATE.REST_END).then((value:boolean) => {
+                resolve(true);
+              });
               setAttDbData(update_data);
-              resolve(true);
             }
             else
             {
@@ -327,11 +313,14 @@ const App: React.FC = () => {
       update_data = {...att_db_data};
       //新規にSTART_END_TIMES要素を作成
       const add_go_out_time:START_END_TIMES = {start:str_now_time,end:null};
-      let update_go_out_times:[START_END_TIMES];
+      let update_go_out_times:START_END_TIMES[] = [];
       //外出が１つもない場合もあるので、ある場合とない場合で処理を変更
       if(update_data.go_out_times != null)
       {
-        update_go_out_times = {...update_data.go_out_times};
+        //update_go_out_times = {...update_data.go_out_times};
+        update_data.go_out_times.map((item) => {
+          update_go_out_times.push(item);
+        })
         update_go_out_times.push(add_go_out_time);
       }
       else
@@ -342,9 +331,10 @@ const App: React.FC = () => {
       db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
         if(error==null)
         {
-          console.log("updateGoOutStartTime Success");
+          updateHistoryDB(new Date(),ACTION_STATE.GO_OUT_START).then((value:boolean) => {
+            resolve(true);
+          });
           setAttDbData(update_data);
-          resolve(true);
         }
         else
         {
@@ -373,8 +363,10 @@ const App: React.FC = () => {
           db.update({date:update_data.date},update_data,{},(error:Error|null,num_of_docs:number,upsert:boolean) => {
             if(error==null)
             {
+              updateHistoryDB(new Date(),ACTION_STATE.GO_OUT_END).then((value:boolean) => {
+                resolve(true);
+              });
               setAttDbData(update_data);
-              resolve(true);
             }
             else
             {
@@ -435,6 +427,88 @@ const App: React.FC = () => {
   }
   //delete
 
+
+  //History Database
+  //get
+  const getHistoryDB = () => {
+    return new Promise<HISTORY_BUFFER>((resolve,reject) => {
+      history_db.find({}).sort({date:1}).exec((err:Error|null,doc:any[]) => {
+        if(err)
+        {
+          console.log("history db.find error");
+          reject(err);
+        }
+        else
+        {
+          if(doc.length > 0)
+          {
+            if(doc != null)
+            {
+              const ret_db:HISTORY_BUFFER = {buff:[]};
+              doc.map((item) => {
+                ret_db.buff.push(item);
+              });
+              resolve(ret_db);
+            }
+            else
+            {
+              console.log("empty history");
+              reject("empty history");
+            }
+          }
+        }
+      });
+    });
+  }
+  //update
+  const updateHistoryDB = (date:Date,type:ACTION_STATE) => {
+    return new Promise<boolean>((resolve,reject) => {
+      const new_hist_buff:HISTORY_BUFFER = {buff:[]};
+      //30件以上なら最初の１件を削除
+      if(history_buff.buff.length >= 30)
+      {
+        console.log("history length over 30");
+        history_db.remove({date:history_buff.buff[0].date},{},(error:Error|null,n:number) => {
+          if(error == null)
+          {
+            console.log("history db first element delete");
+            history_buff.buff.map((item,index) => {
+              if(index != 0)
+              {
+                new_hist_buff.buff.push(item);
+              }
+            });
+          }
+          else
+          {
+            reject(error);
+          }
+        });
+      }
+      else
+      {
+        //30件ないなら変更用のバッファに今までのhistoryを入れる
+        history_buff.buff.map((item) => {
+          new_hist_buff.buff.push(item);
+        });
+      }
+      //追加
+      const new_history:HISTORY_OBJECT = {date:date,action_type:type};
+      history_db.insert(new_history,(error:Error|null,doc:HISTORY_OBJECT) => {
+        if(error == null)
+        {
+          new_hist_buff.buff.push(new_history);
+          setHistoryBuff(new_hist_buff);
+        }
+        else
+        {
+          reject(error);
+          console.log(error);
+        }
+      });
+      
+    });
+  }
   //utility
   /**
    * getNumTimeFromStrTime
@@ -445,7 +519,6 @@ const App: React.FC = () => {
   const getNumTimeFromStrTime = (str_time:string) : number => {
     const ary = str_time.split(':');
     const time = parseInt(ary[0],10)*60 + parseInt(ary[1],10);
-    console.log("from "+str_time+" to "+time);
     return time;
   }
   /**
@@ -588,26 +661,13 @@ const App: React.FC = () => {
   **************************************************************************************************/
   //history関係
   useEffect(() => {
-    //test
-    const test_histories:HISTORY_OBJECT[] = [
-      {
-        date: new Date(2011,6,10,9,0,0),
-        action_type: ACTION_STATE.COMMUTING
-      },
-      {
-        date: new Date(2011,6,10,18,0,0),
-        action_type: ACTION_STATE.LEAVE_WORK
-      },
-      {
-        date: new Date(2011,6,11,9,0,0),
-        action_type: ACTION_STATE.COMMUTING
-      },
-      {
-        date: new Date(2011,6,11,18,0,0),
-        action_type: ACTION_STATE.LEAVE_WORK
-      }
-    ];
-    setHistoryBuff(test_histories);
+    getHistoryDB().then((value:HISTORY_BUFFER) => {
+      console.log("Success History");
+      setHistoryBuff(value);
+    },(reason) => {
+      console.log(reason);
+      //ここでポップアップしたりしてエラーを通知
+    });
   },[]);
   //出退勤データ関係
   useEffect(() => {
@@ -723,7 +783,7 @@ const App: React.FC = () => {
           </Grid>
           {/*履歴画面 */}
           <Grid container className="grid-note">
-            <History buff={history_buff} />
+            {history_buff.buff != undefined ? <History buff={history_buff.buff} /> : <History buff={[]} />}
           </Grid>
         </Grid>
       </Grid>

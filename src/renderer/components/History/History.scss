@@ -1,6 +1,7 @@
 .history_top {
     width: 100%;
-    overflow: scroll;
+    height: 100%;
+    //overflow: auto;
     & .history_date {
         text-align: center;
         background-color: #c0c0c0;
