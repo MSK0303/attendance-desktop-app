@@ -591,7 +591,7 @@ const App: React.FC = () => {
    * @returns 変換した文字列日付
    */
   const getStrDate = (date:Date) : string => {
-    return date.getFullYear() + "/" + ('0'+(date.getMonth()+1)).slice(-2) + "/" + ('0'+date.getDate()).slice(-2) + "(" + STR_DAY_OF_WEEK_ARRAY[date.getDay()] + ")";
+    return date.getFullYear() + "/" + ('0'+(date.getMonth()+1)).slice(-2) + "/" + ('0'+date.getDate()).slice(-2);// + "(" + STR_DAY_OF_WEEK_ARRAY[date.getDay()] + ")";
   }
   /**
    * getStrTodayDate
@@ -749,6 +749,21 @@ const App: React.FC = () => {
       setGoOutBtnText("外出開始");
     }
   }
+
+  const click_att_cal_day = (date:Date) => {
+    console.log("click_att_cal_day");
+    console.log(date);
+    const str_current_date =  getStrDate(date);
+    console.log("search "+str_current_date);
+    getDateInfo(str_current_date).then((value:DATABASE_FORMAT) => {
+      setAttDbData(value);
+      console.log(att_db_data);
+    },(reason) => {
+      console.log("att info nothing");
+      const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null}
+      setAttDbData(value);
+    });
+  }
   /**************************************************************************************************
   *JSX
   **************************************************************************************************/
@@ -760,7 +775,7 @@ const App: React.FC = () => {
         <Grid item xs={6} className="grid-calendar">
           {/*左上側　Calender表示  */}
           <Grid container className="grid-calendar-top">
-            <AttCalendar />
+            <AttCalendar click_day_cb={click_att_cal_day}/>
           </Grid>
           {/*左下側　詳細画面表示  */}
           <Grid container className="grid-calendar-bottom">

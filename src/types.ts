@@ -39,6 +39,11 @@ export interface BUTTONS_PARAM {
     rest_cb:React.MouseEventHandler<HTMLButtonElement>,
     go_out_cb:React.MouseEventHandler<HTMLButtonElement>,
 }
+
+export type ClickDayCallback = (date:Date) => void;
+export interface ATT_CALENDAR_PARAM {
+    click_day_cb:ClickDayCallback,
+};
 /**
  * ATT_DETAIL_PARAM
  * 出退勤詳細コンポーネントに渡す情報
