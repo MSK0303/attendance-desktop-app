@@ -25,6 +25,8 @@ import Nedb from "nedb";
  * @returns JSX
  */
 const App: React.FC = () => {
+  /** 今日の日付 */
+  const [todayDate,setTodayDate] = useState(new Date());
   /** 休憩ボタンの文字 */
   const [restBtnText,setRestBtnText] = useState("休憩開始");
   /** 外出ボタンの文字 */
@@ -33,6 +35,8 @@ const App: React.FC = () => {
   const [history_buff,setHistoryBuff] = useState<HISTORY_BUFFER>({buff:[]});
   /** 選択している出退勤の情報 */
   const [att_db_data,setAttDbData] = useState<DATABASE_FORMAT>({date:"",rest_times:null,go_out_times:null,commuting:null,leave_work:null});
+  /** ボタンの無効情報 */
+  const [is_btn_disabled,setIsBtnDisabled] = useState(false);
   /** 曜日文字の配列 */
   const STR_DAY_OF_WEEK_ARRAY = [ "日", "月", "火", "水", "木", "金", "土" ];
 
@@ -656,6 +660,27 @@ const App: React.FC = () => {
       setGoOutBtnText("外出開始");
     }
   }
+
+  const checkToday = (date:Date) : boolean => {
+    const year = date.getFullYear();
+    const month = date.getMonth()+1;
+    const day = date.getDate();
+    const today = new Date();
+
+    console.log("year : "+year+", month : "+month+", day : "+day);
+    console.log("year : "+todayDate.getFullYear()+", month : "+(todayDate.getMonth()+1)+", day : "+todayDate.getDate());
+
+    if((year == todayDate.getFullYear()) && (month == (todayDate.getMonth()+1)) && (day == todayDate.getDate()))
+    {
+      console.log("checkToday is true");
+      return true;
+    }
+    else
+    {
+      console.log("checkToday is false");
+      return false;
+    }
+  }
   /**************************************************************************************************
   *useEffect
   **************************************************************************************************/
@@ -683,6 +708,8 @@ const App: React.FC = () => {
       const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null}
       setAttDbData(value);
     });
+    setIsBtnDisabled(false);
+    setTodayDate(new Date());
   },[]);
   /**************************************************************************************************
   *ui handler
@@ -763,6 +790,8 @@ const App: React.FC = () => {
       const value:DATABASE_FORMAT = {date:str_current_date,rest_times:null,go_out_times:null,commuting:null,leave_work:null}
       setAttDbData(value);
     });
+    checkToday(date) ? setIsBtnDisabled(false) : setIsBtnDisabled(true);
+    console.log("click_att_cal_day.isBtnDisabled? "+is_btn_disabled);
   }
   /**************************************************************************************************
   *JSX
@@ -791,7 +820,8 @@ const App: React.FC = () => {
           {/*ボタンのレイアウト */}
             <Buttons rest_text={restBtnText} go_out_text={GoOutBtnText}
               commuting_cb={click_commuting_btn} leave_work_cb={click_leave_work_btn}
-              rest_cb={click_rest_btn} go_out_cb={click_go_out_btn} />
+              rest_cb={click_rest_btn} go_out_cb={click_go_out_btn} 
+              disabled={is_btn_disabled}/>
           {/*履歴の上のヘッダ */}
           <Grid container className="grid-note-header" justify="center" alignItems="center">
             履歴
