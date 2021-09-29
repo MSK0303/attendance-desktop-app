@@ -8,12 +8,14 @@ import React,{useState,useEffect} from 'react'
 import Calendar,{ViewCallbackProperties,DrillCallbackProperties} from 'react-calendar';
 import './AttCalendar.css';
 
+import {ATT_CALENDAR_PARAM} from '../../../types'
+
 /**
  * AttCalendar
  * @brief カレンダー処理を記述するComponent
  * @returns JSX
  */
-const AttCalendar = () => {
+const AttCalendar = (props:ATT_CALENDAR_PARAM) => {
     /**
      * getStringDate
      * @brief Dateオブジェクトから日付文字列
@@ -50,6 +52,7 @@ const AttCalendar = () => {
     const onClickDay = (value: Date, event: React.MouseEvent<HTMLButtonElement>) => {
         console.log("onClickDay");
         console.log("date : "+getStringDate(value));
+        props.click_day_cb(value);
     }
 
     return (
